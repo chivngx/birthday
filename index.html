@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="title" content="Happy Birthday Website 2.0 | Aoudumber Bade">
+  <meta name="github" content="https://github.com/Aoudumber-Bade">
+  <title>Birthday Gift Animation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+  <!-- ✨ Magical Celestial Fairy Dust Particle Engine -->
+  <script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function() {
+    var canvas = document.createElement("canvas");
+    canvas.id = "sparkle-canvas";
+    canvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:99999;";
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext("2d");
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    var particles = [];
+    // Aesthetic starlight palette: pure white, champagne diamond, pastel sunlight, iridescent sky
+    var palette = [
+      { core: '#ffffff', glow: 'rgba(255, 255, 255, 0.98)', shadow: '#ffffff' },
+      { core: '#ffffff', glow: 'rgba(254, 240, 138, 0.95)', shadow: '#fde047' },
+      { core: '#fffdf0', glow: 'rgba(253, 224, 71, 0.9)', shadow: '#facc15' },
+      { core: '#ffffff', glow: 'rgba(224, 242, 254, 0.95)', shadow: '#bae6fd' },
+      { core: '#fffbeb', glow: 'rgba(251, 191, 36, 0.85)', shadow: '#f59e0b' }
+    ];
+
+    function spawn(x, y, count, isAmbient) {
+      count = count || 1;
+      for (var i = 0; i < count; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = isAmbient ? (Math.random() * 0.35 + 0.08) : (Math.random() * 1.4 + 0.25);
+        var col = palette[Math.floor(Math.random() * palette.length)];
+        var isStar = Math.random() > 0.3;
+        var maxAge = isAmbient ? (Math.floor(Math.random() * 50 + 60)) : (Math.floor(Math.random() * 40 + 45));
+        particles.push({
+          x: x + (Math.random() - 0.5) * (isAmbient ? 16 : 8),
+          y: y + (Math.random() - 0.5) * (isAmbient ? 16 : 8),
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - (isAmbient ? 0.1 : 0.35),
+          baseSize: isStar ? (Math.random() * 6 + 7) : (Math.random() * 2.5 + 1.6),
+          col: col,
+          rotation: Math.random() * Math.PI,
+          vr: (Math.random() - 0.5) * 0.06,
+          isStar: isStar,
+          age: 0,
+          maxAge: maxAge
+        });
+      }
+    }
+
+    function drawSparkleStar(ctx, x, y, size, col, alpha, rot) {
+      if (size <= 0.2 || alpha <= 0) return;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.shadowColor = col.shadow;
+      ctx.shadowBlur = size * 1.5;
+
+      // 4-Point radiant diamond star
+      var outer = size;
+      var inner = size * 0.17;
+
+      ctx.beginPath();
+      for (var i = 0; i < 4; i++) {
+        var a = (i * Math.PI) / 2;
+        var na = a + Math.PI / 4;
+        if (i === 0) ctx.moveTo(Math.cos(a) * outer, Math.sin(a) * outer);
+        else ctx.lineTo(Math.cos(a) * outer, Math.sin(a) * outer);
+        ctx.lineTo(Math.cos(na) * inner, Math.sin(na) * inner);
+      }
+      ctx.closePath();
+      ctx.fillStyle = col.glow;
+      ctx.fill();
+
+      // Glowing bright core dot
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(0.8, size * 0.22), 0, Math.PI * 2);
+      ctx.fillStyle = col.core;
+      ctx.shadowBlur = size * 0.6;
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawGlitterDot(ctx, x, y, size, col, alpha) {
+      if (size <= 0.2 || alpha <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+      ctx.shadowColor = col.shadow;
+      ctx.shadowBlur = size * 2.2;
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+      ctx.fillStyle = col.core;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        p.age++;
+        var progress = p.age / p.maxAge;
+        if (progress >= 1) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        p.x += p.vx + Math.sin(p.age * 0.08) * 0.2;
+        p.y += p.vy;
+        p.vx *= 0.975;
+        p.vy += 0.02; // gentle stardust gravity
+        p.rotation += p.vr;
+
+        // Smooth lifecycle: pop-in, twinkle, elegant fade-out
+        var scale = 1;
+        if (progress < 0.15) {
+          scale = progress / 0.15;
+        } else if (progress > 0.65) {
+          scale = (1 - progress) / 0.35;
+        }
+        var alpha = Math.sin(progress * Math.PI);
+        var currentSize = p.baseSize * Math.max(0.1, scale);
+
+        if (p.isStar) {
+          drawSparkleStar(ctx, p.x, p.y, currentSize, p.col, alpha, p.rotation);
+        } else {
+          drawGlitterDot(ctx, p.x, p.y, currentSize, p.col, alpha);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // Ambient floating starlight across the celebration page
+    setInterval(function() {
+      if (particles.length < 35) {
+        var rx = Math.random() * window.innerWidth;
+        var ry = Math.random() * (window.innerHeight * 0.85) + (window.innerHeight * 0.08);
+        spawn(rx, ry, 1, true);
+      }
+    }, 380);
+
+    // Interpolated silky-smooth starlight trails
+    var lastX = null, lastY = null;
+    function handleMove(x, y) {
+      if (lastX === null) {
+        lastX = x;
+        lastY = y;
+        spawn(x, y, 2, false);
+        return;
+      }
+      var dx = x - lastX;
+      var dy = y - lastY;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var steps = Math.min(5, Math.max(1, Math.floor(dist / 16)));
+      for (var s = 0; s < steps; s++) {
+        var t = (s + 1) / steps;
+        var ix = lastX + dx * t;
+        var iy = lastY + dy * t;
+        spawn(ix, iy, 1, false);
+      }
+      lastX = x;
+      lastY = y;
+    }
+
+    window.addEventListener("mousemove", function(e) {
+      handleMove(e.clientX, e.clientY);
+    });
+
+    window.addEventListener("mouseout", function() {
+      lastX = null;
+      lastY = null;
+    });
+
+    window.addEventListener("touchmove", function(e) {
+      if (e.touches && e.touches[0]) {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    window.addEventListener("touchend", function() {
+      lastX = null;
+      lastY = null;
+    });
+
+    window.addEventListener("touchstart", function(e) {
+      if (e.touches && e.touches[0]) {
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+        spawn(lastX, lastY, 4, false);
+      }
+    }, { passive: true });
+  });
+  </script>
+</head>
+
+<body>
+  <!-- 👇 Your entire original content (untouched) -->
+  <!-- START -->
+  <div id="wrapper">
+    <div class="flag__birthday">
+      <img src="./images/1.png" alt="" width="350" class="flag__left">
+      <img src="./images/1.png" alt="" width="350" class="flag__right">
+    </div>
+
+    <div class="content">
+      <div class="left">
+        <div class="title">
+          <h1 class="happy">
+            <span style="--t: 4s;">H</span>
+            <span style="--t: 4.2s;">a</span>
+            <span style="--t: 4.4s;">p</span>
+            <span style="--t: 4.6s;">p</span>
+            <span style="--t: 4.8s;">y</span>
+          </h1>
+          <h1 class="birthday">
+            <span style="--t: 5s;">B</span>
+            <span style="--t: 5.2s;">i</span>
+            <span style="--t: 5.4s;">r</span>
+            <span style="--t: 5.6s;">t</span>
+            <span style="--t: 5.8s;">h</span>
+            <span style="--t: 6s;">d</span>
+            <span style="--t: 6.2s;">a</span>
+            <span style="--t: 6.4s;">y</span>
+          </h1>
+          <div class="hat">
+            <img src="./images/hat.png" alt="" width="130">
+          </div>
+        </div>
+
+        <div class="date__of__birth">
+          <span></span>
+        </div>
+
+        <div class="btn">
+          <button id="btn__letter">
+            Click here 
+            <i class="fa-regular fa-envelope"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="right">
+        <div class="box__account">
+          <div class="image">
+            <img src="./images/nhim.png" alt="Nhím">
+          </div>
+          <div class="name">
+            <i class="fa-solid fa-star"></i>
+            <span>Nhím</span>
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div class="balloon_one">
+            <img width="100px" src="./images/balloon1.png" alt="">
+          </div>
+          <div class="balloon_two">
+            <img width="100px" src="./images/balloon2.png" alt="">
+          </div>
+        </div>
+
+        <div class="cricle">
+          <div class="text__cricle">
+            <span style="--i: 1;">h</span>
+            <span style="--i: 2;">a</span>
+            <span style="--i: 3;">p</span>
+            <span style="--i: 4;">p</span>
+            <span style="--i: 5;">y</span>
+            <span style="--i: 6;">-</span>
+            <span style="--i: 7;">b</span>
+            <span style="--i: 8;">i</span>
+            <span style="--i: 9;">r</span>
+            <span style="--i: 10;">t</span>
+            <span style="--i: 11;">h</span>
+            <span style="--i: 12;">d</span>
+            <span style="--i: 13;">a</span>
+            <span style="--i: 14;">y</span>
+            <span style="--i: 15;">-</span>
+          </div>
+          <i class="fa-solid fa-cake-candles"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="decorate_star star1" style="--t: 15s;"></div>
+    <div class="decorate_star star2" style="--t: 15.2s;"></div>
+    <div class="decorate_star star3" style="--t: 15.4s;"></div>
+    <div class="decorate_star star4" style="--t: 15.6s;"></div>
+    <div class="decorate_star star5" style="--t: 15.8s;"></div>
+
+    <div class="decorate_flower--one" style="--t: 15s;">
+      <img width="20" src="./images/decorate_flower.png" alt="">
+    </div>
+    <div class="decorate_flower--two" style="--t: 15.3s;">
+      <img width="20" src="./images/decorate_flower.png" alt="">
+    </div>
+    <div class="decorate_flower--three" style="--t: 15.6s;">
+      <img width="20" src="./images/decorate_flower.png" alt="">
+    </div>
+
+    <div class="decorate_bottom">
+      <img src="./images/decorate.png" alt="" width="100">
+    </div>
+    <div class="smiley__icon">
+      <img src="./images/smiley_icon.png" alt="" width="100">
+    </div>
+
+    <!-- Letter Box -->
+    <div class="box__letter">
+      <div class="letter__border">
+        <div class="letter">
+          <div class="title__letter"></div>
+          <div class="content__letter">
+            <div class="left">
+              <img id="heart__letter" src="https://media0.giphy.com/media/MhYGO6XdrbUb19Ld1q/giphy.gif" alt="Cute Celebration Bear">
+              <i class="fa-solid fa-star star_particle star_1" style="--t: 0.2s"></i>
+              <i class="fa-solid fa-star star_particle star_2" style="--t: 0.4s"></i>
+              <i class="fa-solid fa-star star_particle star_3" style="--t: 0.6s"></i>
+              <i class="fa-solid fa-star star_particle star_4" style="--t: 0.8s"></i>
+            </div>
+            <div class="right">
+              <div class="love__img">
+                <img src="https://media4.giphy.com/media/W4jyjmIpnw6e38B6Qc/giphy.gif" alt="" width="220">
+              </div>
+              <div class="text__letter">
+                <p></p>
+              </div>
+              <img id="mewmew" width="80" src="./images/mewmew.gif" alt="">
+            </div>
+          </div>
+        </div>
+        <div class="close">
+          <i class="fa-solid fa-xmark"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Original script unchanged -->
+  <script>
+    let datetxt = "15 September 2026";
+    let datatxtletter = "Wishing you the happiest birthday! Today, I wish you all the best, lots of health, great success, and endless joy. Always stay amazing, cheerful, and radiant. Happy birthday to you! 🎂🎉✨";
+    let titleLetter = "To you";
+    let charArrDate = datetxt.split('');
+    let charArrDateLetter = datatxtletter.split('');
+    let charArrTitle = titleLetter.split('');
+    let currentIndex = 0;
+    let currentIndexLetter = 0;
+    let currentIndexTitle = 0;
+    let date__of__birth = document.querySelector(".date__of__birth span");
+    let text__letter = document.querySelector(".text__letter p");
+
+    setTimeout(function(){
+      timeDatetxt = setInterval(function(){
+        if(currentIndex < charArrDate.length){
+          date__of__birth.textContent += charArrDate[currentIndex];
+          currentIndex++;
+        } else {
+          let i = document.createElement("i");
+          i.className = "fa-solid fa-star";
+          document.querySelector(".date__of__birth").prepend(i);
+          document.querySelector(".date__of__birth").appendChild(i.cloneNode(true));
+          clearInterval(timeDatetxt);
+        }
+      },100)
+    },12000);
+
+    var intervalContent;
+    var intervalTitle;
+    $("#btn__letter").on("click", function(){
+      $(".box__letter").slideDown();
+      setTimeout(function(){
+        $(".letter__border").slideDown();
+      },1000);
+      setTimeout(function(){
+        intervalTitle = setInterval(function(){
+          if(currentIndexTitle < charArrTitle.length){
+            document.querySelector(".title__letter").textContent += charArrTitle[currentIndexTitle];
+            let i = document.createElement("i");
+            i.className = "fa-solid fa-star";
+            document.querySelector(".title__letter").appendChild(i);
+            currentIndexTitle++;
+          } else {
+            clearInterval(intervalTitle);
+          }
+        },100);
+      },2000);
+      setTimeout(function(){
+        document.querySelector("#heart__letter").classList.add("animationOp");
+        document.querySelector(".love__img").classList.add("animationOp");
+        document.querySelector("#mewmew").classList.add("animationOp");
+      },2800);
+      setTimeout(function(){
+        document.querySelectorAll(".star_particle").forEach((item)=>{
+          item.classList.add("animation");
+        })
+      },3500);
+      setTimeout(function(){
+        intervalContent = setInterval(function(){
+          if(currentIndexLetter < charArrDateLetter.length){
+            text__letter.textContent += charArrDateLetter[currentIndexLetter];
+            currentIndexLetter++;
+          } else {
+            clearInterval(intervalContent);
+          }
+        },50);
+      },6000);
+    });
+
+    $(".close").on("click", function(){
+      clearInterval(intervalContent);
+      document.querySelector(".title__letter").textContent = "";
+      text__letter.textContent = "";
+      currentIndexLetter = 0;
+      currentIndexTitle = 0;
+      document.querySelector("#heart__letter").classList.remove("animationOp");
+      document.querySelector(".love__img").classList.remove("animationOp");
+      document.querySelector("#mewmew").classList.remove("animationOp");
+      document.querySelectorAll(".star_particle").forEach((item)=>{
+        item.classList.remove("animation");
+      });
+      $(".box__letter").slideUp();
+      $(".letter__border").slideUp();
+    });
+  </script>
+</body>
+</html>
